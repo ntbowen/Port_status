@@ -401,7 +401,7 @@ function mergePortConfigs(detectedPorts, userConfig) {
 	var merged = [];
 	var addedDevices = {};
 	
-	/* Ports from user config (preserve order) */
+	/* Ports from user config */
 	userConfig.forEach(function(userPort) {
 		var detected = detectedPorts.find(function(p) { return p.device === userPort.device; });
 		if (detected) {
@@ -416,8 +416,7 @@ function mergePortConfigs(detectedPorts, userConfig) {
 			addedDevices[userPort.device] = true;
 		}
 	});
-	
-	/* Add newly detected ports */
+
 	detectedPorts.forEach(function(port) {
 		if (!addedDevices[port.device]) {
 			merged.push({
@@ -456,7 +455,7 @@ function showEditLabelModal(port, labelElement, descriptionElement, ports) {
 		'class': 'cbi-input-text',
 		'value': currentDescription,
 		'style': 'width: 100%; margin-bottom: 1em;',
-		'placeholder': _('Optional description'),
+		'placeholder': _(''),
 		'maxlength': '50'
 	});
 	
@@ -642,7 +641,6 @@ function showEditLabelModal(port, labelElement, descriptionElement, ports) {
 		])
 	]);
 	
-	/* Focus on input */
 	setTimeout(function() {
 		labelInputEl.focus();
 		labelInputEl.select();
@@ -682,150 +680,203 @@ function makeEditable(element, descriptionElement, port, ports) {
 }
 
 function makeDraggable(element, port, container, ports) {
-	var dragHandle = E('div', {
-		'class': 'drag-handle',
-		'style': 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; cursor: move; z-index: 1; pointer-events: none;',
-		'title': _('Hold to drag and reorder')
-	});
-	
-	element.style.position = 'relative';
-	element.appendChild(dragHandle);
-	
-	var clickTimer = null;
-	var clickStart = null;
-	var hasMoved = false;
-	
-	element.addEventListener('mousedown', function(ev) {
-		if (ev.target.classList.contains('port-label') || ev.target.closest('.port-label')) {
-			return;
-		}
-		
-		if (ev.button !== 0)
-			return;
-		
-		clickStart = { x: ev.clientX, y: ev.clientY };
-		hasMoved = false;
-		
-		clickTimer = setTimeout(function() {
-			if (!hasMoved) {
-				startDrag(ev);
-			}
-		}, 300);
-		
-		ev.preventDefault();
-	});
-	
-	document.addEventListener('mouseup', function(ev) {
-		if (clickTimer) {
-			clearTimeout(clickTimer);
-			clickTimer = null;
-		}
-	});
-	
-	document.addEventListener('mousemove', function(ev) {
-		if (clickTimer && clickStart) {
-			var distance = Math.sqrt(
-				Math.pow(ev.clientX - clickStart.x, 2) + 
-				Math.pow(ev.clientY - clickStart.y, 2)
-			);
-			if (distance > 5) {
-				hasMoved = true;
-				clearTimeout(clickTimer);
-				clickTimer = null;
-			}
-		}
-	});
-	
-	function startDrag(ev) {
-		isDragging = true;
-		draggedElement = element;
-		poll.stop();
-		
-		element.style.opacity = '0.5';
-		element.style.zIndex = '1000';
-		dragHandle.style.cursor = 'move';
-		dragHandle.style.pointerEvents = 'auto';
+    var dragHandle = E('div', {
+        'class': 'drag-handle',
+        'style': 'position: absolute; top: 0; left: 0; right: 0; bottom: 0; cursor: move; z-index: 1; pointer-events: none;',
+        'title': _('Hold to drag and reorder')
+    });
 
-		document.body.style.cursor = 'move';
-		
-		var boxes = Array.from(container.children);
-		var placeholder = E('div', {
-			'class': 'ifacebox drag-placeholder',
-			'style': element.style.cssText + 'opacity: 0.3; border: 3px dashed var(--border-color-medium); background: var(--border-color-low);'
-		});
+    element.style.position = 'relative';
+    element.appendChild(dragHandle);
 
-		element.style.boxShadow = '0 5px 15px var(--border-color-strong)';
-		
-		function onMouseMove(e) {
-			var afterElement = getDragAfterElement(container, e.clientX);
-			if (afterElement == null) {
-				container.appendChild(placeholder);
-			} else {
-				container.insertBefore(placeholder, afterElement);
-			}
-		}
-		
-		function onMouseUp(e) {
-			document.removeEventListener('mousemove', onMouseMove);
-			document.removeEventListener('mouseup', onMouseUp);
-			
-			var afterElement = getDragAfterElement(container, e.clientX);
-			if (afterElement == null) {
-				container.appendChild(element);
-			} else {
-				container.insertBefore(element, afterElement);
-			}
-			
-			if (placeholder.parentNode)
-				placeholder.parentNode.removeChild(placeholder);
-			
-			element.style.opacity = '1';
-			element.style.zIndex = '';
-			element.style.boxShadow = '';
-			dragHandle.style.cursor = 'move';
-			dragHandle.style.pointerEvents = 'none';
-			document.body.style.cursor = '';
-			
-			/* Refresh ports array order */
-			var newOrder = Array.from(container.children).map(function(el) {
-				return el.__port__;
-			}).filter(function(p) { return p; });
-			
-			ports.length = 0;
-			newOrder.forEach(function(p) { ports.push(p); });
-			
-			saveUserPorts(ports).then(function() {
-				isDragging = false;
-				draggedElement = null;
+    var clickTimer = null;
+    var clickStart = null;
+    var hasMoved = false;
+    var isTouch = false;
+
+    function startDrag(ev) {
+        isDragging = true;
+        draggedElement = element;
+        poll.stop();
+
+        element.style.opacity = '0.5';
+        element.style.zIndex = '1000';
+        dragHandle.style.cursor = 'move';
+        dragHandle.style.pointerEvents = 'auto';
+
+        document.body.style.cursor = 'move';
+
+        var placeholder = E('div', {
+            'class': 'ifacebox drag-placeholder',
+            'style': element.style.cssText + 'opacity: 0.3; border: 3px dashed var(--border-color-medium); background: var(--border-color-low);'
+        });
+
+        element.style.boxShadow = '0 5px 15px var(--border-color-strong)';
+
+        function onMouseMove(e) {
+            if (isTouch && e.cancelable) {
+                e.preventDefault();
+            }
+            
+            var clientX = e.clientX;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+            }
+            
+            var afterElement = getDragAfterElement(container, clientX);
+            if (afterElement == null) {
+                container.appendChild(placeholder);
+            } else {
+                container.insertBefore(placeholder, afterElement);
+            }
+        }
+
+        function onMouseUp(e) {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            document.removeEventListener('touchmove', onMouseMove, { passive: false });
+            document.removeEventListener('touchend', onMouseUp);
+
+            var clientX = e.clientX;
+            if (e.changedTouches && e.changedTouches.length > 0) {
+                clientX = e.changedTouches[0].clientX;
+            }
+            
+            var afterElement = getDragAfterElement(container, clientX);
+            if (afterElement == null) {
+                container.appendChild(element);
+            } else {
+                container.insertBefore(element, afterElement);
+            }
+
+            if (placeholder.parentNode)
+                placeholder.parentNode.removeChild(placeholder);
+
+            element.style.opacity = '1';
+            element.style.zIndex = '';
+            element.style.boxShadow = '';
+            dragHandle.style.cursor = 'move';
+            dragHandle.style.pointerEvents = 'none';
+            document.body.style.cursor = '';
+
+            var newOrder = Array.from(container.children).map(function(el) {
+                return el.__port__;
+            }).filter(function(p) { return p; });
+
+            ports.length = 0;
+            newOrder.forEach(function(p) { ports.push(p); });
+
+            saveUserPorts(ports).then(function() {
+                isDragging = false;
+                draggedElement = null;
+                isTouch = false;
                 popTimeout(null, E('p', _('Port order saved')), 5000, 'info');
-				poll.start();
-			}).catch(function(err) {
-				isDragging = false;
-				draggedElement = null;
-				poll.start();
-			});
-		}
-		
-		document.addEventListener('mousemove', onMouseMove);
-		document.addEventListener('mouseup', onMouseUp);
-	}
-	
-	function getDragAfterElement(container, x) {
-		var draggableElements = Array.from(container.children).filter(function(child) {
-			return child !== draggedElement && child.classList.contains('ifacebox');
-		});
-		
-		return draggableElements.reduce(function(closest, child) {
-			var box = child.getBoundingClientRect();
-			var offset = x - box.left - box.width / 2;
-			
-			if (offset < 0 && offset > closest.offset) {
-				return { offset: offset, element: child };
-			} else {
-				return closest;
-			}
-		}, { offset: Number.NEGATIVE_INFINITY }).element;
-	}
+                poll.start();
+            }).catch(function(err) {
+                isDragging = false;
+                draggedElement = null;
+                isTouch = false;
+                poll.start();
+            });
+        }
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+        document.addEventListener('touchmove', onMouseMove, { passive: false });
+        document.addEventListener('touchend', onMouseUp);
+    }
+
+    function getDragAfterElement(container, x) {
+        var draggableElements = Array.from(container.children).filter(function(child) {
+            return child !== draggedElement && child.classList.contains('ifacebox');
+        });
+
+        return draggableElements.reduce(function(closest, child) {
+            var box = child.getBoundingClientRect();
+            var offset = x - box.left - box.width / 2;
+
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function onPointerDown(ev) {
+        if (ev.target.classList.contains('port-label') || ev.target.closest('.port-label')) {
+            return;
+        }
+
+        isTouch = (ev.type === 'touchstart');
+        
+        if (!isTouch && ev.button !== undefined && ev.button !== 0) {
+            return;
+        }
+
+        var clientX = ev.clientX;
+        var clientY = ev.clientY;
+        
+        if (isTouch && ev.touches && ev.touches.length > 0) {
+            clientX = ev.touches[0].clientX;
+            clientY = ev.touches[0].clientY;
+        }
+        
+        clickStart = { x: clientX, y: clientY };
+        hasMoved = false;
+
+        // Timer for Touch (400ms), mouse (200ms)
+        var delay = isTouch ? 400 : 200;
+        
+        clickTimer = setTimeout(function() {
+            if (!hasMoved) {
+                startDrag(ev);
+            }
+        }, delay);
+
+        if (isTouch) {
+            ev.preventDefault();
+        }
+    }
+
+    function onPointerUp(ev) {
+        if (clickTimer) {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+        }
+        hasMoved = false;
+        clickStart = null;
+    }
+
+    function onPointerMove(ev) {
+        if (clickTimer && clickStart) {
+            var clientX = ev.clientX;
+            var clientY = ev.clientY;
+            
+            if (isTouch && ev.touches && ev.touches.length > 0) {
+                clientX = ev.touches[0].clientX;
+                clientY = ev.touches[0].clientY;
+            }
+            
+            var distance = Math.sqrt(
+                Math.pow(clientX - clickStart.x, 2) + 
+                Math.pow(clientY - clickStart.y, 2)
+            );
+            
+            if (distance > 5) {
+                hasMoved = true;
+                clearTimeout(clickTimer);
+                clickTimer = null;
+            }
+        }
+    }
+
+    element.addEventListener('mousedown', onPointerDown);
+    element.addEventListener('touchstart', onPointerDown, { passive: false });
+    document.addEventListener('mouseup', onPointerUp);
+    document.addEventListener('touchend', onPointerUp);
+    document.addEventListener('mousemove', onPointerMove);
+    document.addEventListener('touchmove', onPointerMove, { passive: false });
 }
 
 return baseclass.extend({
@@ -890,7 +941,7 @@ return baseclass.extend({
 			return L.naturalCompare(a.device, b.device);
 		});
 
-		/* Save initial config if doesn't exist */
+		/* Save config */
 		if (!userConfig) {
 			var initialConfig = detected_ports.map(function(p) {
 				return {
@@ -927,61 +978,70 @@ return baseclass.extend({
 			'style': 'display:grid;grid-template-columns:repeat(auto-fit, minmax(70px, 1fr));margin-bottom:1em' 
 		});
 
-		known_ports.forEach(function(port) {
-			var speed = port.netdev.getSpeed(),
-			    duplex = port.netdev.getDuplex(),
-			    carrier = port.netdev.getCarrier(),
-			    pmap = port_map[port.netdev.getName()],
-			    pzones = (pmap && pmap.zones.length) ? pmap.zones.sort(function(a, b) { return L.naturalCompare(a.getName(), b.getName()) }) : [ null ];
+known_ports.forEach(function(port) {
+	var speed = port.netdev.getSpeed(),
+	    duplex = port.netdev.getDuplex(),
+	    carrier = port.netdev.getCarrier(),
+	    pmap = port_map[port.netdev.getName()],
+	    pzones = (pmap && pmap.zones.length) ? pmap.zones.sort(function(a, b) { return L.naturalCompare(a.getName(), b.getName()) }) : [ null ];
 
-			var labelDiv = E('div', { 
-				'class': 'ifacebox-head port-label', 
-				'style': 'font-weight:bold; position: relative; z-index: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0.25em 0.5em;' 
-			}, [ port.label || port.device ]);
+	var labelDiv = E('div', { 
+		'class': 'ifacebox-head port-label', 
+		'style': 'font-weight:bold; position: relative; z-index: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0.25em 0.5em;' 
+	}, [ port.label || port.device ]);
 
-			var descriptionDiv = E('div', { 
-				'class': 'ifacebox-body port-description', 
-				'style': 'font-size:70%; color: var(--text-color-secondary); padding: 0.2em 0.5em; min-height: 1.2em; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; cursor: help; display: ' + (port.description ? 'block' : 'none'),
-				'title': port.description || ''
-			}, [ port.description || '' ]);
+	var descriptionDiv = E('div', { 
+		'class': 'ifacebox-body port-description', 
+		'style': 'font-size:70%; color: var(--text-color-secondary); padding: 0.2em 0.5em; min-height: 1.2em; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; cursor: help; display: ' + (port.description ? 'block' : 'none'),
+		'title': port.description || ''
+	}, [ port.description || '' ]);
 
-			var portBox = E('div', { 
-				'class': 'ifacebox', 
-				'style': 'margin:.25em;min-width:70px;max-width:100px; user-select: none;' 
+	var portBox = E('div', { 
+		'class': 'ifacebox', 
+		'style': 'margin:.25em;min-width:70px;max-width:100px; user-select: none;' 
+	}, [
+		labelDiv,
+		descriptionDiv,
+		E('div', { 
+			'class': 'ifacebox-body',
+			'style': 'overflow: hidden; text-overflow: ellipsis; white-space: nowrap;'
+		}, [
+			E('img', { 'src': L.resource('icons/port_%s.svg').format(carrier ? 'up' : 'down') }),
+			E('br'),
+			E('span', {
+				'style': 'display: inline-block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;',
+				'title': carrier ? 
+					(speed > 0 && duplex ? _('Speed: %d Mibit/s, Duplex: %s').format(speed, duplex) : _('Connected')) : 
+					_('no link')
 			}, [
-				labelDiv,
-				descriptionDiv,
-				E('div', { 'class': 'ifacebox-body' }, [
-					E('img', { 'src': L.resource('icons/port_%s.svg').format(carrier ? 'up' : 'down') }),
-					E('br'),
-					formatSpeed(carrier, speed, duplex)
-				]),
-				E('div', { 'class': 'ifacebox-head cbi-tooltip-container', 'style': 'display:flex' }, [
-					E([], pzones.map(function(zone) {
-						return E('div', {
-							'class': 'zonebadge',
-							'style': 'cursor:help;flex:1;height:3px;opacity:' + (carrier ? 1 : 0.25) + ';' + firewall.getZoneColorStyle(zone)
-						});
-					})),
-					E('span', { 'class': 'cbi-tooltip left' }, [ renderNetworksTooltip(pmap) ])
-				]),
-				E('div', { 'class': 'ifacebox-body' }, [
-					E('div', { 'class': 'cbi-tooltip-container', 'style': 'text-align:left;font-size:80%' }, [
-						'\u25b2\u202f%1024.1mB'.format(port.netdev.getTXBytes()),
-						E('br'),
-						'\u25bc\u202f%1024.1mB'.format(port.netdev.getRXBytes()),
-						E('span', { 'class': 'cbi-tooltip' }, formatStats(port.netdev))
-					]),
-				])
-			]);
+				formatSpeed(carrier, speed, duplex)
+			])
+		]),
+		E('div', { 'class': 'ifacebox-head cbi-tooltip-container', 'style': 'display:flex' }, [
+			E([], pzones.map(function(zone) {
+				return E('div', {
+					'class': 'zonebadge',
+					'style': 'cursor:help;flex:1;height:3px;opacity:' + (carrier ? 1 : 0.25) + ';' + firewall.getZoneColorStyle(zone)
+				});
+			})),
+			E('span', { 'class': 'cbi-tooltip left' }, [ renderNetworksTooltip(pmap) ])
+		]),
+		E('div', { 'class': 'ifacebox-body' }, [
+			E('div', { 'class': 'cbi-tooltip-container', 'style': 'text-align:left;font-size:80%' }, [
+				'\u25b2\u202f%1024.1mB'.format(port.netdev.getTXBytes()),
+				E('br'),
+				'\u25bc\u202f%1024.1mB'.format(port.netdev.getRXBytes()),
+				E('span', { 'class': 'cbi-tooltip' }, formatStats(port.netdev))
+			]),
+		])
+	]);
 
-			portBox.__port__ = port;
-			makeEditable(labelDiv, descriptionDiv, port, known_ports);
-			makeDraggable(portBox, port, container, known_ports);
-			
-			container.appendChild(portBox);
-		});
-
+	portBox.__port__ = port;
+	makeEditable(labelDiv, descriptionDiv, port, known_ports);
+	makeDraggable(portBox, port, container, known_ports);
+	
+	container.appendChild(portBox);
+});
 		return container;
 	}
 });
