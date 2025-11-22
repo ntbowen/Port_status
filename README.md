@@ -6,22 +6,19 @@
 ![GitHub All Releases](https://img.shields.io/github/downloads/4IceG/Port_status/total)
 
 > [!NOTE]
-> <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24">
-> My small modification of "Port Status".   
-> <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24">
-> Moja mała modyfikacja "Statusu portów".
+> 🇬🇧 My small modification of "Port Status".   
+> 🇨🇳 我对"端口状态"的小修改。
 
 > [!IMPORTANT]
-> <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24">   
+> 🇬🇧   
 > ***Change port label / description*** - click on the header   
 > ***Change port order*** - drag and drop (grab the area around the icon)   
-> <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24">   
-> ***Zmiana etykiety / opisu portu*** - klikamy w nagłówek   
-> ***Zmiana kolejności portów*** - przeciągnij i upuść (chwytamy za obszar wokół ikony)
+> 🇨🇳   
+> ***更改端口标签/描述*** - 点击标题   
+> ***更改端口顺序*** - 拖放（抓住图标周围的区域）
 
 > [!NOTE]
-> <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24">
-> ***Installation on a router:***
+> 🇬🇧 ***Installation on a router:***
 
 <details>
    <summary>Show me</summary>
@@ -57,14 +54,13 @@ We search for the section with permissions for luci-mod-status-index-ports and r
 </details>
 
 > [!NOTE]
-> <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24">
-> ***Instalacja na routerze:***
+> 🇨🇳 ***在路由器上安装：***
 
 <details>
-   <summary>Pokaż</summary>
+   <summary>显示</summary>
 
-1. Podmieniamy zawartość pliku 29_ports.js za pomocą WinSCP (/www/luci-static/resources/view/status/include)
-2. Zmieniamy uprawnienia w luci-mod-status-index.json (/usr/share/rpcd/acl.d/luci-mod-status-index.json). Szukamy sekcji z uprawnieniami dla luci-mod-status-index-ports i podmieniamy na:   
+1. 使用 WinSCP 替换 29_ports.js 文件的内容 (/www/luci-static/resources/view/status/include)
+2. 修改 luci-mod-status-index.json 中的权限 (/usr/share/rpcd/acl.d/luci-mod-status-index.json)。查找 luci-mod-status-index-ports 的权限部分并替换为：   
 
 ``` bash
 	"luci-mod-status-index-ports": {
@@ -88,23 +84,22 @@ We search for the section with permissions for luci-mod-status-index-ports and r
 		}
 	},
 ```    
-3. Czyścimy cache przeglądarki
-4. Za pierwszym razem może utworzyć plik /etc/user_defined_ports.json ale pusty, ponawiamy konfigurację i już mamy to co być powinno.
+3. 清除浏览器缓存
+4. 第一次可能会创建 /etc/user_defined_ports.json 文件但为空，重复配置即可获得所需结果。
 </details>
 
 > [!NOTE]
-> <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24">
-> ***Dodanie przy kompilacji:***
+> 🇨🇳 ***编译时添加：***
 
 <details>
-   <summary>Pokaż</summary>
+   <summary>显示</summary>
 
-1. Podmieniamy plik 29_ports.js w lokalizacji
+1. 替换以下位置的 29_ports.js 文件
    > /feeds/luci/modules/luci-mod-status/htdocs/luci-static/resources/view/status/include
-2. Zmieniamy uprawnienia w luci-mod-status-index.json, plik znajduje się w
-   > /feeds/luci/modules/luci-mod-status/root/usr/share/rpcd/acl.d/luci-mod-status-index.json.
+2. 修改 luci-mod-status-index.json 的权限，文件位于
+   > /feeds/luci/modules/luci-mod-status/root/usr/share/rpcd/acl.d/luci-mod-status-index.json
 
-	Szukamy sekcji z uprawnieniami dla luci-mod-status-index-ports i podmieniamy na:   
+	查找 luci-mod-status-index-ports 的权限部分并替换为：   
 ``` bash
 	"luci-mod-status-index-ports": {
 	  "description": "Grant access to port status display",
@@ -127,16 +122,16 @@ We search for the section with permissions for luci-mod-status-index-ports and r
 		}
 	},
 ```    
-3. Dodajemy tłumaczenie dla nowych okienek / elementów menu. Kopiujemy linijki tłumaczenia z pliku Port_status.pot do pliku w lokalizacji /feeds/luci/modules/luci-base/po/pl
-4. Dopisujemy do pliku
+3. 为新窗口/菜单元素添加翻译。将 Port_status.pot 文件中的翻译行复制到 /feeds/luci/modules/luci-base/po/zh_Hans 位置的文件中
+4. 在文件末尾添加
    > /package/base-files/files/lib/upgrade/keep.d/base-files-essential
 
-	na końcu nową linijkę /etc/user_defined_ports.json, aby zachować ustawienia poczynione przez użytkownika podczas generowania archiwum z kopią zapasową
+	新行 /etc/user_defined_ports.json，以便在生成备份存档时保留用户设置
 </details>
 
 
 
-### <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_United_Kingdom.png" height="24"> Preview / <img src="https://raw.githubusercontent.com/4IceG/Personal_data/master/dooffy_design_icons_EU_flags_Poland.png" height="24"> Podgląd
+### 🇬🇧 Preview / 🇨🇳 预览
 
 <img width="1290" height="510" alt="Status_port" src="https://github.com/user-attachments/assets/cee839c8-f8ef-444b-b888-456f0761d7fc" />
 
