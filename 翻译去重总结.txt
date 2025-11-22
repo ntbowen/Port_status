@@ -1,0 +1,160 @@
+================================================================================
+                    Port Status 翻译去重分析总结
+================================================================================
+
+一、对比结果
+------------
+4IceG 版本和官方 LuCI 版本的 29_ports.js 使用了完全相同的翻译字符串（53个）
+说明：4IceG 版本是在官方版本基础上扩展的，保留了所有原有功能
+
+二、翻译统计
+------------
+总翻译字符串：56 个
+├─ 已在 luci-base 中：20 个 (35.7%) ← 可以去重
+├─ 4IceG 特有翻译：33 个 (58.9%) ← 需要保留
+├─ 复数形式：1 个 (1.8%)
+└─ 空占位符：2 个 (3.6%)
+
+三、已在 luci-base 中的翻译（20个，可去重）
+--------------------------------------------
+网络统计 (10个):
+  ✓ Received bytes
+  ✓ Received packets
+  ✓ Received multicast
+  ✓ Receive errors
+  ✓ Receive dropped
+  ✓ Transmitted bytes
+  ✓ Transmitted packets
+  ✓ Transmit errors
+  ✓ Transmit dropped
+  ✓ Collisions seen
+
+端口状态 (6个):
+  ✓ Port status
+  ✓ Speed: %d Mibit/s, Duplex: %s
+  ✓ Connected
+  ✓ no link
+  ✓ Part of zone %q
+  ✓ No zone assigned
+
+网络接口 (2个):
+  ✓ (no interfaces attached)
+  ✓ Port is not part of any network
+
+通用按钮 (2个):
+  ✓ Cancel
+  ✓ Save
+
+四、4IceG 特有翻译（33个，必须保留）
+------------------------------------
+端口标签编辑 (6个):
+  • Edit Port Label
+  • Enter new label for this port:
+  • Original label
+  • Restore Original
+  • Click to edit label
+  • Label max 9 chars, description max 50 chars.
+
+端口描述 (1个):
+  • Enter description (optional):
+
+拖拽排序 (2个):
+  • Hold to drag and reorder
+  • Port order saved
+
+配置保存 (3个):
+  • Port configuration saved successfully
+  • User settings are saved to the /etc/user_defined_ports.json file.
+  • Saving configuration...
+
+配置导入导出 (5个):
+  • Save .json file
+  • Upload .json file
+  • Configuration file downloaded
+  • Configuration file not found
+  • Download error: %s
+
+配置恢复 (7个):
+  • Restore configuration
+  • This will overwrite current ports configuration. Continue?
+  • Configuration restored successfully. Reloading...
+  • File restore failed: %s
+  • Invalid configuration format
+  • Invalid JSON file: %s
+  • Restore
+
+错误处理 (9个):
+  • Save Error
+  • Cannot save port configuration. 
+  • Directory /etc may be read-only or insufficient permissions. 
+  • Try running: chmod 755 /etc && touch %s && chmod 644 %s
+  • Original error: %s
+  • Warning: Could not create port configuration file.
+  • Port customizations will not be saved.
+  • Check /etc directory permissions
+  • Device
+
+五、生成的文件
+--------------
+1. Port_status_zh-Hans.po
+   - 完整翻译文件（56个条目）
+   - 包含所有翻译（含重复）
+   - 适合独立使用
+
+2. Port_status_zh-Hans_deduplicated.po ← 推荐使用
+   - 去重翻译文件（33个条目）
+   - 仅包含 4IceG 特有翻译
+   - 依赖 luci-base 的标准翻译
+   - 减小文件体积 41%
+
+3. TRANSLATION_ANALYSIS.md
+   - 详细分析报告
+   - 包含使用建议和注意事项
+
+六、推荐方案
+------------
+使用去重文件 (Port_status_zh-Hans_deduplicated.po)
+
+优点：
+  ✓ 避免与 luci-base 重复翻译
+  ✓ 文件更小（33 vs 56 条）
+  ✓ 依赖标准翻译，保持一致性
+  ✓ 更易维护
+
+前提条件：
+  ! 确保 luci-i18n-base-zh-cn 已安装
+
+七、使用方法
+------------
+方法1：编译时集成（推荐）
+  mkdir -p po/zh_Hans/
+  cp Port_status_zh-Hans_deduplicated.po po/zh_Hans/port_status.po
+  # 编译时会自动生成 .lmo 文件
+
+方法2：使用完整文件（独立发布）
+  mkdir -p po/zh_Hans/
+  cp Port_status_zh-Hans.po po/zh_Hans/port_status.po
+
+八、注意事项
+------------
+1. 简体中文不区分单复数，复数形式只需一个 msgstr[0]
+2. 所有格式化占位符 (%s, %d, %q) 必须保持不变
+3. 文件路径和命令（chmod等）保持原样
+4. "Device" 虽在 luci-base 中可能存在，但上下文不同，建议保留
+
+九、验证命令
+------------
+# 检查翻译完整性
+grep -oP "_\('\K[^']+(?=')" 29_ports.js | sort -u | wc -l
+
+# 检查 luci-base 中的翻译
+grep "^msgid" /feeds/luci/modules/luci-base/po/zh_Hans/base.po | wc -l
+
+# 对比差异
+comm -23 <(grep -oP "_\('\K[^']+(?=')" 29_ports.js | sort -u) \
+         <(grep "^msgid" /feeds/luci/modules/luci-base/po/zh_Hans/base.po | \
+           grep -v '^msgid ""' | sed 's/msgid "//' | sed 's/"$//' | sort)
+
+================================================================================
+                              总结完成
+================================================================================

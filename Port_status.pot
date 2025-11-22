@@ -75,3 +75,95 @@ msgstr "Zapisz plik .json"
 
 msgid "Upload .json file"
 msgstr "Załaduj plik .json"
+
+msgid "Invalid JSON file: %s"
+msgstr "Nieprawidłowy plik JSON: %s"
+
+msgid "Saving configuration..."
+msgstr "Zapisywanie konfiguracji..."
+
+msgid "Cannot save port configuration. "
+msgstr "Nie można zapisać konfiguracji portów. "
+
+msgid "Directory /etc may be read-only or insufficient permissions. "
+msgstr "Katalog /etc może być tylko do odczytu lub brak wystarczających uprawnień. "
+
+msgid "Try running: chmod 755 /etc && touch %s && chmod 644 %s"
+msgstr "Spróbuj uruchomić: chmod 755 /etc && touch %s && chmod 644 %s"
+
+msgid "Save Error"
+msgstr "Błąd zapisu"
+
+msgid "Original error: %s"
+msgstr "Oryginalny błąd: %s"
+
+msgid "Warning: Could not create port configuration file."
+msgstr "Ostrzeżenie: Nie można utworzyć pliku konfiguracji portów."
+
+msgid "Port customizations will not be saved."
+msgstr "Dostosowania portów nie zostaną zapisane."
+
+msgid "Check /etc directory permissions"
+msgstr "Sprawdź uprawnienia katalogu /etc"
+
+msgid "Port status"
+msgstr "Status portów"
+
+msgid "Speed: %d Mibit/s, Duplex: %s"
+msgstr "Prędkość: %d Mibit/s, Dupleks: %s"
+
+msgid "Connected"
+msgstr "Połączony"
+
+msgid "no link"
+msgstr "brak połączenia"
+
+msgid "Received bytes"
+msgstr "Odebrane bajty"
+
+msgid "Received packets"
+msgstr "Odebrane pakiety"
+
+msgid "Received multicast"
+msgstr "Odebrane multicast"
+
+msgid "Receive errors"
+msgstr "Błędy odbioru"
+
+msgid "Receive dropped"
+msgstr "Odrzucone przy odbiorze"
+
+msgid "Transmitted bytes"
+msgstr "Przesłane bajty"
+
+msgid "Transmitted packets"
+msgstr "Przesłane pakiety"
+
+msgid "Transmit errors"
+msgstr "Błędy transmisji"
+
+msgid "Transmit dropped"
+msgstr "Odrzucone przy transmisji"
+
+msgid "Collisions seen"
+msgstr "Wykryte kolizje"
+
+msgid "Part of zone %q"
+msgstr "Część strefy %q"
+
+msgid "No zone assigned"
+msgstr "Brak przypisanej strefy"
+
+msgid "(no interfaces attached)"
+msgstr "(brak podłączonych interfejsów)"
+
+msgid "Part of network:"
+msgid_plural "Part of networks:"
+msgstr[0] "Część sieci:"
+msgstr[1] "Część sieci:"
+
+msgid "Port is not part of any network"
+msgstr "Port nie jest częścią żadnej sieci"
+
+msgid "Restore"
+msgstr "Przywróć"
